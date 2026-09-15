@@ -17,26 +17,27 @@ export const AVAILABILITY_CONFIDENCE_THRESHOLD = 0.5;
 export interface AvailabilitySummary {
   season: AvailabilityRow["season"];
   isOffered: boolean;
+  /** Included for transparency now that every returned row is confirmed. */
   confidence: number;
   source: AvailabilityRow["source"];
-  /**
-   * True only above AVAILABILITY_CONFIDENCE_THRESHOLD. Consumers should
-   * treat an unconfirmed row as unknown/absent, not as a downgraded
-   * warning — raw confidence is included for transparency, not so a caller
-   * invents its own threshold and reintroduces the false-warning risk
-   * Decision 7 exists to prevent.
-   */
-  confirmed: boolean;
 }
 
+/**
+ * Only returns rows at/above AVAILABILITY_CONFIDENCE_THRESHOLD — the
+ * confidence gate is enforced here, not left for every future caller to
+ * remember to check. A below-threshold claim is silence (Decision 7 /
+ * CLAUDE.md's warn-only rule), not downgraded data for a caller to render
+ * with a caveat.
+ */
 export function summarizeAvailability(
   rows: AvailabilityRow[],
 ): AvailabilitySummary[] {
-  return rows.map((row) => ({
-    season: row.season,
-    isOffered: row.is_offered,
-    confidence: row.confidence,
-    source: row.source,
-    confirmed: row.confidence >= AVAILABILITY_CONFIDENCE_THRESHOLD,
-  }));
+  return rows
+    .filter((row) => row.confidence >= AVAILABILITY_CONFIDENCE_THRESHOLD)
+    .map((row) => ({
+      season: row.season,
+      isOffered: row.is_offered,
+      confidence: row.confidence,
+      source: row.source,
+    }));
 }

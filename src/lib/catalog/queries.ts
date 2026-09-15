@@ -28,11 +28,20 @@ export async function searchCourses(
   const q = query.trim();
   if (!q) return [];
 
-  const escaped = q.replace(/[%_]/g, (m) => `\\${m}`);
+  // Escape SQL LIKE wildcards (%, _) first, then wrap the whole value in
+  // PostgREST's own double-quote syntax (escaping internal " and \) before
+  // interpolating into .or() — .or() parses its argument as PostgREST
+  // filter grammar, where , and ) are clause delimiters, not literal
+  // characters. Backslash-escaping those delimiters is NOT valid PostgREST
+  // syntax (confirmed against the live API: it 400s) — double-quoting the
+  // value is the documented way to pass an arbitrary string through a
+  // horizontal-filtering operator like ilike inside or().
+  const likeEscaped = q.replace(/[%_]/g, (m) => `\\${m}`);
+  const pgrestQuoted = `"%${likeEscaped.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}%"`;
   const { data, error } = await supabase
     .from("catalog_courses")
     .select("id, code, title, credits_min, credits_max")
-    .or(`code.ilike.%${escaped}%,title.ilike.%${escaped}%`)
+    .or(`code.ilike.${pgrestQuoted},title.ilike.${pgrestQuoted}`)
     .order("code")
     .limit(MAX_SEARCH_RESULTS);
 

@@ -5,8 +5,8 @@ import {
 } from "@/lib/catalog/availability";
 
 describe("summarizeAvailability", () => {
-  it("marks confirmed=true at/above the threshold", () => {
-    const [row] = summarizeAvailability([
+  it("includes a row at/above the threshold", () => {
+    const rows = summarizeAvailability([
       {
         season: "fall",
         is_offered: true,
@@ -14,11 +14,12 @@ describe("summarizeAvailability", () => {
         source: "catalog_text",
       },
     ]);
-    expect(row.confirmed).toBe(true);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].season).toBe("fall");
   });
 
-  it("marks confirmed=false just below the threshold (never guesses)", () => {
-    const [row] = summarizeAvailability([
+  it("drops a row just below the threshold (never guesses)", () => {
+    const rows = summarizeAvailability([
       {
         season: "spring",
         is_offered: true,
@@ -26,14 +27,16 @@ describe("summarizeAvailability", () => {
         source: "observed",
       },
     ]);
-    expect(row.confirmed).toBe(false);
+    expect(rows).toEqual([]);
   });
 
-  it("carries raw confidence through unchanged for transparency", () => {
-    const [row] = summarizeAvailability([
+  it("drops low-confidence rows while keeping confirmed ones from the same set", () => {
+    const rows = summarizeAvailability([
       { season: "summer", is_offered: false, confidence: 0.2, source: "plan_of_study" },
+      { season: "fall", is_offered: true, confidence: 0.9, source: "catalog_text" },
     ]);
-    expect(row.confidence).toBe(0.2);
-    expect(row.confirmed).toBe(false);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].season).toBe("fall");
+    expect(rows[0].confidence).toBe(0.9);
   });
 });

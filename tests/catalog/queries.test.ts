@@ -54,6 +54,15 @@ describe("searchCourses", () => {
   it("returns [] for a query matching nothing", async () => {
     expect(await searchCourses(supabase, "ZZZZ-NOPE-999")).toEqual([]);
   });
+
+  it("does not throw on PostgREST filter-grammar characters in the query", async () => {
+    // Regression: commas/parens are .or()'s own delimiters, not SQL syntax —
+    // escaping only %/_ let a raw "," or ")" split/close the filter early.
+    await expect(
+      searchCourses(supabase, "Intro, Advanced Topics (CS)"),
+    ).resolves.toEqual([]);
+    await expect(searchCourses(supabase, "a,b)c(d")).resolves.toEqual([]);
+  });
 });
 
 describe("getCourseDetail", () => {
@@ -81,11 +90,11 @@ describe("getCourseDetail", () => {
     expect(detail!.prereqTree).not.toBeNull();
   });
 
-  it("marks availability confirmed only above the confidence threshold", async () => {
+  it("only returns availability rows above the confidence threshold", async () => {
     const [summary] = await searchCourses(supabase, "CSCI-141");
     const detail = await getCourseDetail(supabase, summary.id);
     for (const a of detail!.availability) {
-      expect(a.confirmed).toBe(a.confidence >= 0.5);
+      expect(a.confidence).toBeGreaterThanOrEqual(0.5);
     }
   });
 });
