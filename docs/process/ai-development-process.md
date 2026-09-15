@@ -12,9 +12,10 @@ just the product — kept as a record to refer back to and to speak about later.
 | Product Owner / Solutions Architect | Casey | Vision, prioritization, requirements, architecture decisions, review/approval |
 | Planning & Spec Partner | Claude (chat) | Turning loose ideas into specs, structuring phases, architecture discussion, documentation |
 | UI/UX Design | Claude Design | Screens, interaction patterns, visual system |
-| Implementation | Claude Code | Ingestion, backend, frontend — writing and running code |
+| Implementation | Claude Code + Casey | Ingestion, backend, frontend — see "Task ownership model" below for the split |
 
-Throughout: the owner makes decisions and reviews outputs, and does not write code.
+Phases 0/1 ran with the owner reviewing but not writing code. **Starting
+Phase 3**, that changed deliberately — see below.
 
 ---
 
@@ -46,9 +47,9 @@ because they are the most expensive to reverse.
 |---|---|---|
 | 0 — Data & schema planning | Human + Claude (chat) | **Complete** |
 | 1 — Data ingestion | Claude Code | **Complete** — Tasks 0–5 all merged (Programs API + TigerCenter adapters, prereq parsing, availability seeding) |
-| 2 — UI/UX design | Claude Design | Ready to start — not yet begun |
-| 3 — Backend / API | Claude Code | **Ready to start** — brief at `docs/handoff/phase-3-backend-brief.md` |
-| 4 — Frontend | Claude Code | Blocked on 2 + 3 |
+| 2 — UI/UX design | Claude Design + Casey (direction/critique) | **Starting** — brief at `docs/handoff/phase-2-design-brief.md` |
+| 3 — Backend / API | Split — see Task ownership model below | **Ready to start** — brief at `docs/handoff/phase-3-backend-brief.md`, now with per-task owner tags |
+| 4 — Frontend | Split — same model, task tags TBD when briefed | Blocked on 2 + 3 |
 
 Phases 1 and 2 run in parallel: design depends on the *schema*, not on ingested data.
 
@@ -63,6 +64,54 @@ Code is not reviewed line by line, so safety lives in the process:
 - Tests on core logic as the review proxy — review test *intent*, not implementation
 - Small PRs per feature slice; a 2,000-line PR cannot be meaningfully reviewed
 - Separate dev/prod Supabase instances from day one
+
+---
+
+## Task ownership model (Phase 3+)
+
+**Why this exists.** Casey's goals for this project are twofold: ship a real
+MVP, and build resume/interview-ready evidence of both (a) hands-on software
+engineering ability and (b) working effectively with AI coding agents. A
+fully AI-delegated build is fast but produces weak interview signal — "an
+agent wrote it" doesn't answer "walk me through how this works." A fully
+hand-written build burns the time budget and drops the AI-workflow story
+entirely. The split below is the resolution: **divide by task, not by
+phase**, based on how much real engineering judgment a task requires versus
+how much of it is scaffolding/CRUD.
+
+**Rule of thumb:**
+- **Hands-on (Casey writes it):** tasks with real state-transition logic,
+  a non-obvious business rule, or an edge case an interviewer would actually
+  probe — the kind of function you should be able to explain line by line
+  months later. Claude Code scaffolds the surrounding route/wiring and
+  reviews the finished code (tests included) rather than writing the logic
+  itself.
+- **Delegate (Claude Code writes it):** CRUD, query/route plumbing, and
+  repetitive data-shaping work where the interesting decision was already
+  made in the schema or the brief. Casey still reviews every diff line by
+  line before merge, same as Phase 1 — "delegated" means not hand-typed, not
+  unreviewed.
+- **Split:** a task where most of it is plumbing but one piece (an
+  algorithm, a genuinely ambiguous rule) is worth doing by hand. Named
+  explicitly per task rather than left ambiguous.
+
+**Current tags**, defined where each task is actually specced:
+- Phase 3 (Tasks 6–10): see the owner tag on each task heading in
+  `docs/handoff/phase-3-backend-brief.md`. Tasks 7 and 9 are hands-on and
+  written as full step-by-step specs there, PM-to-developer style — steps,
+  suggested function signatures, edge cases to think through, and what to
+  test — rather than the terser prose the delegated tasks get, since
+  Claude Code doesn't need that scaffolding but Casey does.
+- Phase 4 (frontend): not yet briefed. When it is, apply the same rule of
+  thumb — the flowchart canvas's grid-position logic and per-term credit
+  totals are likely hands-on candidates; drag-and-drop wiring and styling
+  are likely delegate.
+
+**Handoff mechanics for a hands-on task:** write the function and its tests
+locally, get them passing, *then* ask Claude Code to (a) scaffold the route/
+server-action wiring around it and (b) run a review pass (`/code-review`)
+against the diff before opening the PR — treating that review the way
+Task 5's pre-merge QA pass worked, a real second pass, not a rubber stamp.
 
 ---
 
@@ -164,3 +213,4 @@ Phase 3's tasks, especially the ones with real state-transition logic
 | 2026-08-31 | `catalog_course_attributes.term_code` made nullable, with a `source` column and two partial-unique indexes, instead of splitting into two tables | Task 3 needed a real writer for this table (TigerCenter, term-scoped) while leaving room for a future catalog-year-scoped writer (Programs API's `detail-ge_attrs`, still unbuilt). Table confirmed to have zero writers before deciding, so this shaped an unused table rather than migrating live data — see `schema-decisions.md` |
 | 2026-09-02 | `catalog_course_term_offerings` stays accumulate-forward-only; no historical-term backfill | The only confirmed historical term codes are Fall-only, so backfilling would strengthen Fall confidence but leave the Spring/Summer cold-start gap untouched, and would need new `catalog_terms` rows with inferred metadata no existing writer handles — see `schema-decisions.md`'s resolved flag |
 | 2026-09-04 | Task 5 went through a senior-dev/QA pass before merge, not just author self-review | Caught a real data-completeness bug (`ingest_documents` dedup collision in the new `fetchCourseDetail` — 5 of 6 real not-found courses were silently never persisted) and a test-coverage gap on the priority-waterfall logic that unit tests alone hadn't surfaced — see the handoff brief's Task 5 status and the QA findings memory |
+| 2026-09-14 | Task ownership split by task, not by phase, starting Phase 3 — owner hand-writes designated "hands-on" tasks (Tasks 7, 9) instead of reviewing only | Project goals are dual: ship an MVP and build interview-ready evidence of hands-on engineering skill alongside AI-agent workflow experience. Full delegation optimizes only the second goal; the split targets tasks with real state-transition logic or non-obvious business rules for hand-authorship, leaving CRUD/plumbing delegated — see "Task ownership model" above |

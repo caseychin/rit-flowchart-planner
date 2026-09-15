@@ -140,8 +140,15 @@ undocumented and may change without notice.
 
 ## Working style
 
-- **Small, reviewable PRs**, one feature slice each. The project owner reviews
-  diffs but does not write code — a 2,000-line PR cannot be meaningfully reviewed.
+- **Small, reviewable PRs**, one feature slice each, reviewed line-by-line
+  before merge — a 2,000-line PR cannot be meaningfully reviewed. **As of
+  Phase 3**, the project owner hand-implements core logic for designated
+  "hands-on" tasks (see `docs/process/ai-development-process.md`'s Task
+  ownership model and the per-task owner tags in
+  `docs/handoff/phase-3-backend-brief.md`) — Claude Code scaffolds the
+  surrounding routes/wiring and reviews the finished code rather than
+  writing it. For tasks tagged "delegate," Claude Code implements
+  end-to-end as in Phase 1, with the owner reviewing the diff.
 - **Write tests for core logic**: prereq parsing, availability inference,
   template→flowchart instantiation, credit totals. Tests are the review proxy.
   UI polish does not need exhaustive tests.

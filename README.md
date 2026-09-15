@@ -36,7 +36,8 @@ MCP `list_migrations`) rather than assuming they match.
 | [`architecture/data-sources.md`](architecture/data-sources.md) | RIT API reference, findings, open questions |
 | [`architecture/schema-decisions.md`](architecture/schema-decisions.md) | Rationale behind `db/schema.sql` |
 | [`handoff/claude-code-brief.md`](handoff/claude-code-brief.md) | Phase 1 implementation brief (complete) |
-| [`handoff/phase-3-backend-brief.md`](handoff/phase-3-backend-brief.md) | Phase 3 implementation brief |
+| [`handoff/phase-2-design-brief.md`](handoff/phase-2-design-brief.md) | Phase 2 UI/UX design brief |
+| [`handoff/phase-3-backend-brief.md`](handoff/phase-3-backend-brief.md) | Phase 3 implementation brief, with per-task ownership tags |
 | [`process/ai-development-process.md`](process/ai-development-process.md) | How this project is built using AI tools |
 | [`../CLAUDE.md`](../CLAUDE.md) | Conventions and guardrails for Claude Code |
 | [`../db/schema.sql`](../db/schema.sql) | Database schema — source of truth |
