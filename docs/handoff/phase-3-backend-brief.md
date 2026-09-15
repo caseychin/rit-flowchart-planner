@@ -1,9 +1,10 @@
 # Claude Code Handoff Brief — Phase 3 (Backend / API)
 
 **Status:** Phase 1 (data ingestion) is complete — Tasks 0-5 all merged, see
-`docs/handoff/claude-code-brief.md`. Phase 2 (UI/UX design, Claude Design)
-has not started, but per `docs/process/ai-development-process.md`'s phase
-table, Phase 3 is blocked only on Phase 1, not Phase 2 — the app-layer
+`docs/handoff/claude-code-brief.md`. Phase 2 (UI/UX design, Claude Design) is
+starting in parallel — see `docs/handoff/phase-2-design-brief.md` — but per
+`docs/process/ai-development-process.md`'s phase table, Phase 3 is blocked
+only on Phase 1, not Phase 2 — the app-layer
 schema (Decisions 1/2/3/8 below) gives enough shape to build against without
 a visual design in hand. This brief defines the first two Phase 3 tasks,
 numbered continuing from Phase 1 (Task 6, Task 7 — not restarting at 1).
@@ -153,8 +154,16 @@ for future double-majors/BS-MS, but v1 only ever inserts one row).
 2. Fetch all `catalog_requirement_slots` rows for `programId`, ordered by
    `year_number`, `season`, `sort_order`.
 3. Map each slot to a `flowchart_blocks` insert row:
-   - `year_number`, `season`, `sort_order`, `kind`, `course_id`, `label`,
+   - `year_number`, `sort_order`, `kind`, `course_id`, `label`,
      `required_attribute_id`, `category_hint` → copy straight across
+   - `season` → **not a straight copy.** `catalog_requirement_slots.season`
+     is nullable (`null` = "anytime that year"), but
+     `flowchart_blocks.season` is `not null`. A slot with `season = null`
+     will fail the insert if copied as-is. Decide and document the
+     resolution here (e.g. default to `'fall'`, or split an "anytime" slot
+     across a fixed pick, or some other explicit rule) — don't discover
+     this from a constraint error at runtime. State the chosen rule in the
+     PR per CLAUDE.md's "state assumptions explicitly."
    - slot's `credits` → block's **`credits_override`** — note the rename,
      it's easy to miss
    - `source_slot_id` = the originating slot's `id` (provenance for a
