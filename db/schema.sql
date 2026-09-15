@@ -423,6 +423,14 @@ create table flowchart_blocks (
   year_number           smallint not null,
   season                term_season not null,
   sort_order            integer not null default 0,
+  -- Links rows that together render as ONE multi-term block (a year-long
+  -- co-op spanning Fall/Spring/Summer, say). Null for the vast majority of
+  -- blocks, which occupy exactly one term on their own. A spanning block is
+  -- still N ordinary rows — one per term it occupies, each with its own real
+  -- (year_number, season) — never a widened range; the UI/API merge
+  -- same-span_group_id rows into one rendered block. See Decision 9 in
+  -- schema-decisions.md.
+  span_group_id         uuid,
 
   kind                  block_kind not null,
   course_id             uuid references catalog_courses(id),
@@ -461,6 +469,7 @@ create table flowchart_blocks (
 
 create index on flowchart_blocks (flowchart_id, year_number, season, sort_order);
 create index on flowchart_blocks (course_id);
+create index on flowchart_blocks (flowchart_id, span_group_id) where span_group_id is not null;
 
 
 -- =====================================================================

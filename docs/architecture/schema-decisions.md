@@ -258,6 +258,37 @@ option; it just wasn't worth taking now.
 
 ---
 
+## Decision 9 — Multi-term spans are multiple linked rows, not one row with a range
+
+A block that runs across consecutive terms — a year-long co-op spanning
+Fall/Spring/Summer, say — is stored as **one `flowchart_blocks` row per term
+it occupies**, not as a single row with a start/end position. A nullable
+`span_group_id` (uuid) links the rows that together render as one block.
+
+**Why:** Decision 3 makes `(year_number, season, sort_order)` a single
+concrete value per row on purpose — that's what keeps "what's in Fall of
+Year 3" a plain equality query. A start/end range would turn every
+position-scoped query into an overlap check, for a case (spanning blocks)
+that's rare and, being co-op, contributes 0 credits per row either way — so
+"3 linked rows, each an ordinary block" costs nothing at the term-total or
+prerequisite-ordering level and needed no change to how those already query
+position.
+
+**Cost:** the UI/API has to know to merge same-`span_group_id` rows into one
+rendered block, and editing or deleting "the" co-op means operating on N
+rows, not one. **Mitigation:** `span_group_id` is nullable and only ever set
+on blocks meant to render merged — the overwhelming majority of blocks
+(single-term) never have it set and are unaffected. Grouped rows are
+expected, not DB-enforced, to share `flowchart_id` and `kind` and sit on
+consecutive `(year_number, season)` positions; validating that shape on
+write is an API-layer concern for whoever builds Task 6/7's block endpoints
+(`docs/handoff/phase-3-backend-brief.md`), same as `block_shape`'s sibling
+invariants aren't all enforced in SQL either.
+
+See `supabase/migrations/0003_flowchart_blocks_span_group.sql`.
+
+---
+
 ## Flag — immersions are ingested as entities only; internal structure deferred
 
 Task 2 (Programs API adapter) ingests all 77 immersions as lightweight

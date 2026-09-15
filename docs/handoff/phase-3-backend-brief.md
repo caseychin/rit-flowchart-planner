@@ -254,6 +254,15 @@ blocks between old and new position) versus moving across columns (also
 changing `year_number`/`season`), and whether to renumber every affected row
 on every move or leave gaps and renumber lazily.
 
+**New since this brief was written:** `flowchart_blocks` gained
+`span_group_id` (schema-decisions.md, Decision 9) for multi-term blocks — a
+year-long co-op stored as N linked rows sharing one `span_group_id`, not one
+row with a range. Creating/editing a spanning block (keeping `flowchart_id`,
+`kind`, and consecutive `(year_number, season)` consistent across every row
+in the group) is not DB-enforced and has the same "real invariant, not a
+plain field write" shape as the reorder logic above — bucket it with that
+piece rather than the delegated plain-field work.
+
 ## Task 9 — Placeholder resolution
 
 **Owner: You (hands-on).** This is the one place Decision 2 (resolving a
