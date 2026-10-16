@@ -240,12 +240,10 @@ templated path alongside it, not a replacement.
 
 ### Handing this back
 
-Once your function and its tests pass locally: ask Claude Code to (a) wire
-it into a server action in `src/app/flowcharts/actions.ts` — pure
-route/form-binding scaffolding, no business logic left to relitigate — and
-(b) run `/code-review` against the diff before you open the PR. Treat that
-review the way Task 5's pre-merge QA pass worked: a real second pass, not
-a rubber stamp.
+Once your function and its tests pass locally: ask Claude Code to wire it
+into a server action in `src/app/flowcharts/actions.ts` (pure route/
+form-binding, no business logic left to relitigate) and run the review pass
+described in "Task ownership" above.
 
 ---
 

@@ -183,13 +183,11 @@ same field, caught only because the parser was built to report unfamiliar
 text rather than guess at it.
 
 **A senior-dev/QA pass on Task 5, done deliberately rather than merging on
-author self-review alone, was worth it.** It found a real data-completeness
-bug (a dedup collision silently dropping `ingest_documents` rows for
-several real courses) that passing tests and clean `tsc`/`eslint` output
-had not caught, plus a genuine test-coverage gap on the newest, most novel
-piece of logic in the PR (the priority-rank waterfall). Worth repeating for
-Phase 3's tasks, especially the ones with real state-transition logic
-(block reordering, placeholder resolution) rather than pure data pipelines.
+author self-review alone, was worth it** — it caught real issues that passing
+tests and clean `tsc`/`eslint` output had not (specifics in the handoff
+brief's Task 5 status). Worth repeating for Phase 3's tasks, especially the
+ones with real state-transition logic (block reordering, placeholder
+resolution) rather than pure data pipelines.
 
 ---
 
