@@ -10,6 +10,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase";
 import type { TigerCenterCourseIR } from "@/ingest/types";
+import { ensureSubjectStub, findCourseId } from "@/ingest/catalog-courses";
 
 export type WriteCourseResult = { courseId: string; isNew: boolean };
 
@@ -18,21 +19,9 @@ export async function writeCourseFromTigerCenter(
   course: TigerCenterCourseIR,
   termCode: string,
 ): Promise<WriteCourseResult> {
-  const { error: subjectError } = await client
-    .from("catalog_subjects")
-    .upsert(
-      { code: course.subjectCode, name: course.subjectCode },
-      { onConflict: "code", ignoreDuplicates: true },
-    );
-  if (subjectError) throw subjectError;
+  await ensureSubjectStub(client, course.subjectCode);
 
-  const { data: existing, error: selectError } = await client
-    .from("catalog_courses")
-    .select("id")
-    .eq("subject_code", course.subjectCode)
-    .eq("catalog_number", course.catalogNumber)
-    .maybeSingle();
-  if (selectError) throw selectError;
+  const existingId = await findCourseId(client, course.subjectCode, course.catalogNumber);
 
   const enrichedFields = {
     title: course.title,
@@ -47,10 +36,10 @@ export async function writeCourseFromTigerCenter(
     updated_at: new Date().toISOString(),
   };
 
-  if (existing) {
-    const { error: updateError } = await client.from("catalog_courses").update(enrichedFields).eq("id", existing.id);
+  if (existingId) {
+    const { error: updateError } = await client.from("catalog_courses").update(enrichedFields).eq("id", existingId);
     if (updateError) throw updateError;
-    return { courseId: existing.id, isNew: false };
+    return { courseId: existingId, isNew: false };
   }
 
   const { data: inserted, error: insertError } = await client

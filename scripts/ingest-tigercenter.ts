@@ -9,7 +9,7 @@ config({ path: ".env.ingest" });
 
 import { createRateLimitedFetcher } from "../src/ingest/http";
 import { createServiceClient } from "../src/ingest/service-client";
-import { persistDocument } from "../src/ingest/documents";
+import { fetchAndPersist } from "../src/ingest/documents";
 import { startRun, finishRun } from "../src/ingest/runs";
 import {
   fetchMaintenance,
@@ -32,24 +32,11 @@ import type { AttributeIR, TigerCenterCourseIR } from "../src/ingest/types";
 
 const ROWS_PER_PAGE = 100; // matches the frontend's own max; the real server ceiling is 140 (Task 0.4)
 
-async function fetchPersisted(
+const fetchPersisted = (
   client: SupabaseClient<Database>,
   runId: string,
   fetchFn: () => Promise<{ endpoint: string; requestParams: Record<string, unknown>; status: number; body: string }>,
-): Promise<string> {
-  const raw = await fetchFn();
-  await persistDocument(client, {
-    runId,
-    source: "tigercenter",
-    endpoint: raw.endpoint,
-    requestParams: raw.requestParams as Record<string, Json>,
-    body: raw.body,
-  });
-  if (raw.status !== 200) {
-    throw new Error(`${raw.endpoint} returned HTTP ${raw.status}`);
-  }
-  return raw.body;
-}
+) => fetchAndPersist(client, runId, "tigercenter", fetchFn);
 
 async function loadAttributeIdMap(client: SupabaseClient<Database>): Promise<Map<string, string>> {
   const { data, error } = await client.from("catalog_attributes").select("id, group_code, value_code");

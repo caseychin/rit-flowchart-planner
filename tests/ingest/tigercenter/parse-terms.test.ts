@@ -1,11 +1,8 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import { parseCurrentTerms } from "@/ingest/sources/tigercenter/parse-terms";
+import { loadFixture } from "../../fixtures/load";
 
-function fixture(name: string): string {
-  return readFileSync(fileURLToPath(new URL(`../../fixtures/tigercenter/${name}`, import.meta.url)), "utf8");
-}
+const fixture = (name: string) => loadFixture("tigercenter", name);
 
 describe("parseCurrentTerms", () => {
   it("unwraps the Solr response envelope and extracts term fields", () => {

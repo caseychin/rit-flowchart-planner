@@ -1,11 +1,8 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import { parseCanonicalProgramSlug } from "@/ingest/sources/programs-api/parse-canonical-slug";
+import { loadFixture } from "../fixtures/load";
 
-function fixture(name: string): string {
-  return readFileSync(fileURLToPath(new URL(`../fixtures/programs-api/${name}`, import.meta.url)), "utf8");
-}
+const fixture = (name: string) => loadFixture("programs-api", name);
 
 describe("parseCanonicalProgramSlug", () => {
   it("resolves the real /programs/ slug when it diverges from the /study/ listing slug", () => {

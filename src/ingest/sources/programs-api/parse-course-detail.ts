@@ -20,13 +20,7 @@
 // not acted on.
 import * as cheerio from "cheerio";
 import type { TermSeason } from "@/ingest/types";
-
-const SEASON_MAP: Record<string, TermSeason> = {
-  fall: "fall",
-  spring: "spring",
-  summer: "summer",
-  intersession: "intersession",
-};
+import { parseSeason } from "@/ingest/season";
 
 export type ParseCourseDetailResult =
   | { status: "ok"; code: string; seasons: TermSeason[]; rawText: string }
@@ -59,7 +53,7 @@ export function parseCourseDetail(xml: string, code: string): ParseCourseDetailR
 
   const seasons: TermSeason[] = [];
   for (const fragment of afterLabel.split(/,|\bor\b/i)) {
-    const season = SEASON_MAP[fragment.trim().toLowerCase()];
+    const season = parseSeason(fragment);
     if (season && !seasons.includes(season)) seasons.push(season);
   }
 

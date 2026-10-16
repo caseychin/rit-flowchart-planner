@@ -3,19 +3,13 @@
 // tests/fixtures/tigercenter/current-terms.json. currentTerms leaks a raw
 // Solr response (docs[]), not a flat array, per data-sources.md.
 import type { TermIR, TermSeason } from "@/ingest/types";
-
-const SEASON_MAP: Record<string, TermSeason> = {
-  fall: "fall",
-  spring: "spring",
-  summer: "summer",
-  intersession: "intersession",
-};
+import { parseSeason } from "@/ingest/season";
 
 // '2026-27 Fall (2261)' -> { academicYear: '2026-27', season: 'fall' }
 function parseDescription(descr: string): { season: TermSeason | null; academicYear: string | null } {
   const match = descr.match(/^(\d{4}-\d{2})\s+(Fall|Spring|Summer|Intersession)\b/i);
   if (!match) return { season: null, academicYear: null };
-  return { academicYear: match[1], season: SEASON_MAP[match[2].toLowerCase()] ?? null };
+  return { academicYear: match[1], season: parseSeason(match[2]) ?? null };
 }
 
 export function parseCurrentTerms(json: string): TermIR[] {

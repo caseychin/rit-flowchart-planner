@@ -8,6 +8,7 @@ import { createServiceClient } from "@/ingest/service-client";
 import { upsertAvailabilityClaim } from "@/availability/upsert-availability-claim";
 import { writeCatalogTextAvailability } from "@/availability/write-catalog-text";
 import type { ParseCourseDetailResult } from "@/ingest/sources/programs-api/parse-course-detail";
+import { getAnyCourseId, clearAvailability } from "./helpers";
 
 // Proves the DB-level guarantee that CLAUDE.md's "manual always wins" rule
 // depends on: no programmatic seeding step may ever overwrite a `manual`
@@ -22,15 +23,13 @@ let courseId: string;
 const SEASON = "intersession" as const;
 
 async function cleanup() {
-  await client.from("catalog_course_availability").delete().eq("course_id", courseId).eq("season", SEASON);
+  await clearAvailability(client, courseId, [SEASON]);
 }
 
 describe("catalog_course_availability: manual override is never overwritten", () => {
   beforeAll(async () => {
     client = createServiceClient();
-    const { data, error } = await client.from("catalog_courses").select("id, code").order("code").limit(1).single();
-    if (error || !data) throw error ?? new Error("No catalog_courses rows found — run ingestion first.");
-    courseId = data.id;
+    courseId = await getAnyCourseId(client);
     await cleanup();
   });
 

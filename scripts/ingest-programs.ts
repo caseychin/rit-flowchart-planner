@@ -9,7 +9,7 @@ config({ path: ".env.ingest" });
 
 import { createRateLimitedFetcher } from "../src/ingest/http";
 import { createServiceClient } from "../src/ingest/service-client";
-import { persistDocument } from "../src/ingest/documents";
+import { fetchAndPersist } from "../src/ingest/documents";
 import { startRun, finishRun } from "../src/ingest/runs";
 import {
   fetchCurriculum,
@@ -31,26 +31,11 @@ import type { Database, Json } from "../src/types/supabase";
 
 const DEGREE_PROGRAM_SLUGS = ["computer-science-bs", "software-engineering-bs", "mechanical-engineering-bs"];
 
-/** Fetches, persists the raw payload, and throws on a non-200 response
- * before anything tries to parse what's likely an error page. */
-async function fetchPersisted(
+const fetchPersisted = (
   client: SupabaseClient<Database>,
   runId: string,
   fetchFn: () => Promise<{ endpoint: string; requestParams: Record<string, string>; status: number; body: string }>,
-): Promise<string> {
-  const raw = await fetchFn();
-  await persistDocument(client, {
-    runId,
-    source: "programs_api",
-    endpoint: raw.endpoint,
-    requestParams: raw.requestParams,
-    body: raw.body,
-  });
-  if (raw.status !== 200) {
-    throw new Error(`${raw.endpoint} returned HTTP ${raw.status}`);
-  }
-  return raw.body;
-}
+) => fetchAndPersist(client, runId, "programs_api", fetchFn);
 
 async function main() {
   const client = createServiceClient();

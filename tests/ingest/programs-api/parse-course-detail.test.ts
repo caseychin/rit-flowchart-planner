@@ -1,11 +1,8 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import { parseCourseDetail } from "@/ingest/sources/programs-api/parse-course-detail";
+import { loadFixture } from "../../fixtures/load";
 
-function fixture(name: string): string {
-  return readFileSync(fileURLToPath(new URL(`../../fixtures/programs-api/${name}`, import.meta.url)), "utf8");
-}
+const fixture = (name: string) => loadFixture("programs-api", name);
 
 describe("parseCourseDetail", () => {
   it("extracts seasons from a real Typically Offered span", () => {

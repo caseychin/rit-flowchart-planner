@@ -46,3 +46,26 @@ export async function persistDocument(
 
   return { isNew: true, contentHash };
 }
+
+/** Fetches, persists the raw payload, and throws on a non-200 response
+ * before anything tries to parse what's likely an error page. Shared by
+ * both ingestion scripts. */
+export async function fetchAndPersist(
+  client: SupabaseClient<Database>,
+  runId: string,
+  source: "programs_api" | "tigercenter",
+  fetchFn: () => Promise<{ endpoint: string; requestParams: Record<string, unknown>; status: number; body: string }>,
+): Promise<string> {
+  const raw = await fetchFn();
+  await persistDocument(client, {
+    runId,
+    source,
+    endpoint: raw.endpoint,
+    requestParams: raw.requestParams as Record<string, Json>,
+    body: raw.body,
+  });
+  if (raw.status !== 200) {
+    throw new Error(`${raw.endpoint} returned HTTP ${raw.status}`);
+  }
+  return raw.body;
+}

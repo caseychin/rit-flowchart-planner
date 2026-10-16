@@ -1,11 +1,8 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import { parseAdvancedSearchData } from "@/ingest/sources/tigercenter/parse-vocabulary";
+import { loadFixture } from "../../fixtures/load";
 
-function fixture(name: string): string {
-  return readFileSync(fileURLToPath(new URL(`../../fixtures/tigercenter/${name}`, import.meta.url)), "utf8");
-}
+const fixture = (name: string) => loadFixture("tigercenter", name);
 
 describe("parseAdvancedSearchData", () => {
   const parsed = parseAdvancedSearchData(fixture("advanced-search-data.json"), "2261");

@@ -17,14 +17,9 @@ import * as cheerio from "cheerio";
 import type { CheerioAPI, Cheerio } from "cheerio";
 import type { AnyNode } from "domhandler";
 import type { ParsedProgram, RequirementSlotIR, TermSeason } from "@/ingest/types";
+import { parseSeason } from "@/ingest/season";
 
 const ORDINAL_YEAR_WORDS = ["First", "Second", "Third", "Fourth", "Fifth", "Sixth"];
-const SEASON_MAP: Record<string, TermSeason> = {
-  fall: "fall",
-  spring: "spring",
-  summer: "summer",
-  intersession: "intersession",
-};
 
 function extractCourseCode($el: Cheerio<AnyNode>): string | undefined {
   const bubble = $el.find("[data-code-bubble]").first();
@@ -72,7 +67,7 @@ function parseYearHeader(text: string, seenYears: number): number {
 }
 
 function parseSeasonHeader(text: string): TermSeason {
-  const season = SEASON_MAP[text.trim().toLowerCase()];
+  const season = parseSeason(text);
   if (!season) {
     throw new Error(`Unrecognized term header "${text.trim()}" — expected Fall/Spring/Summer/Intersession.`);
   }

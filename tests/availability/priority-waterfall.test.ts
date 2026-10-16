@@ -6,6 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase";
 import { createServiceClient } from "@/ingest/service-client";
 import { upsertAvailabilityClaim } from "@/availability/upsert-availability-claim";
+import { getAnyCourseId, clearAvailability } from "./helpers";
 
 // manual-override.test.ts proves `manual` always wins. This covers the rest
 // of the waterfall guard in upsert-availability-claim.ts — the
@@ -26,19 +27,13 @@ const SELF_REFRESH = "summer" as const;
 const PLAN_BLOCKS_OBSERVED = "intersession" as const;
 
 async function cleanup() {
-  await client
-    .from("catalog_course_availability")
-    .delete()
-    .eq("course_id", courseId)
-    .in("season", [SKIPPED_BY_HIGHER, OVERWRITES_LOWER, SELF_REFRESH, PLAN_BLOCKS_OBSERVED]);
+  await clearAvailability(client, courseId, [SKIPPED_BY_HIGHER, OVERWRITES_LOWER, SELF_REFRESH, PLAN_BLOCKS_OBSERVED]);
 }
 
 describe("catalog_course_availability: programmatic priority waterfall", () => {
   beforeAll(async () => {
     client = createServiceClient();
-    const { data, error } = await client.from("catalog_courses").select("id, code").order("code").limit(1).single();
-    if (error || !data) throw error ?? new Error("No catalog_courses rows found — run ingestion first.");
-    courseId = data.id;
+    courseId = await getAnyCourseId(client);
   });
 
   beforeEach(cleanup);
