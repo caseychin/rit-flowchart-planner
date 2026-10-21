@@ -1,5 +1,36 @@
 # RIT Course Flowchart Planner
 
+A web app for RIT students to plan their **entire degree** as an interactive,
+drag-and-drop flowchart, modeled on RIT's official department flowcharts but
+personalized, editable, and saved per user. It answers "will I satisfy every
+requirement before I graduate?" It is not a semester scheduler.
+
+**Stack:** Next.js (App Router) + TypeScript, Supabase (Postgres + Auth, RLS on
+every user table), Vitest.
+
+## How it works
+
+- **Ingestion:** Pulls live curriculum data from two RIT sources (the Programs
+  API and TigerCenter) into Postgres: 400+ courses, program requirement
+  templates, and prerequisite text parsed into AND/OR trees. Raw payloads are
+  stored before parsing, so data can be re-normalized without re-fetching.
+- **Provenance:** Course-availability signals come from several sources that
+  can disagree. A confidence-weighted model reconciles them, prefers
+  authoritative data over inferred data, and stays silent rather than guessing
+  when confidence is low.
+- **Flowcharts:** A user's plan is a materialized copy of a program template,
+  so curriculum changes never silently rewrite someone's plan.
+
+## Status
+
+- Phase 1 (data ingestion): complete
+- Phase 2 (UI/UX design) and Phase 3 (backend/API): in progress
+- Not deployed yet
+
+Built with an AI-assisted workflow: written acceptance criteria, small
+reviewable PRs, and tests on core logic. See
+[`docs/process/ai-development-process.md`](docs/process/ai-development-process.md).
+
 ## Getting started
 
 ```bash
@@ -32,14 +63,14 @@ MCP `list_migrations`) rather than assuming they match.
 
 | Document | Purpose |
 |---|---|
-| [`product/prd.md`](product/prd.md) | Product requirements, MVP scope, phases |
-| [`architecture/data-sources.md`](architecture/data-sources.md) | RIT API reference, findings, open questions |
-| [`architecture/schema-decisions.md`](architecture/schema-decisions.md) | Rationale behind `db/schema.sql` |
-| [`handoff/claude-code-brief.md`](handoff/claude-code-brief.md) | Phase 1 implementation brief (complete) |
-| [`handoff/phase-2-design-brief.md`](handoff/phase-2-design-brief.md) | Phase 2 UI/UX design brief |
-| [`handoff/phase-3-backend-brief.md`](handoff/phase-3-backend-brief.md) | Phase 3 implementation brief, with per-task ownership tags |
-| [`process/ai-development-process.md`](process/ai-development-process.md) | How this project is built using AI tools |
-| [`../CLAUDE.md`](../CLAUDE.md) | Conventions and guardrails for Claude Code |
-| [`../db/schema.sql`](../db/schema.sql) | Database schema — source of truth |
+| [`docs/product/prd.md`](docs/product/prd.md) | Product requirements, MVP scope, phases |
+| [`docs/architecture/data-sources.md`](docs/architecture/data-sources.md) | RIT API reference, findings, open questions |
+| [`docs/architecture/schema-decisions.md`](docs/architecture/schema-decisions.md) | Rationale behind `db/schema.sql` |
+| [`docs/handoff/claude-code-brief.md`](docs/handoff/claude-code-brief.md) | Phase 1 implementation brief (complete) |
+| [`docs/handoff/phase-2-design-brief.md`](docs/handoff/phase-2-design-brief.md) | Phase 2 UI/UX design brief |
+| [`docs/handoff/phase-3-backend-brief.md`](docs/handoff/phase-3-backend-brief.md) | Phase 3 implementation brief, with per-task ownership tags |
+| [`docs/process/ai-development-process.md`](docs/process/ai-development-process.md) | How this project is built using AI tools |
+| [`CLAUDE.md`](CLAUDE.md) | Conventions and guardrails for Claude Code |
+| [`db/schema.sql`](db/schema.sql) | Database schema — source of truth |
 
 These docs are mirrored to Google Drive. **The repo copy is authoritative.**
