@@ -190,6 +190,11 @@ This applies to both prerequisite checking and term availability.
 
 - Prereqs: only reason about courses where `prereq_parse_status = 'parsed'`.
   Courses that are `partial`/`failed`/`unparsed` produce **silence**, not guesses.
+  Even in a `parsed` tree, an OR group with **any** `unparsed` child counts as
+  satisfied. That child may be a phrase ("or equivalent course") or a code we
+  never ingested (`CSEC-124`), and the student may have met it. Checking only
+  the known alternatives would falsely warn them. At least 69 dev courses have
+  this shape.
 - Availability: only warn above a confidence threshold. Low-confidence
   availability produces **silence**.
 

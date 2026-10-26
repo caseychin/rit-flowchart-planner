@@ -12,6 +12,7 @@ config({ path: ".env.ingest", quiet: true });
 
 import { createRateLimitedFetcher } from "../src/ingest/http";
 import { createServiceClient } from "../src/ingest/service-client";
+import { selectAll } from "../src/ingest/select-all";
 import { persistDocument } from "../src/ingest/documents";
 import { startRun, finishRun } from "../src/ingest/runs";
 import { fetchCourseDetail } from "../src/ingest/sources/programs-api/client";
@@ -24,9 +25,10 @@ async function main() {
   const client = createServiceClient();
   const fetcher = createRateLimitedFetcher();
 
-  const { data: courses, error: coursesError } = await client.from("catalog_courses").select("id, code");
-  if (coursesError) throw coursesError;
-  const targets = (courses ?? []).filter((c): c is { id: string; code: string } => c.code != null);
+  const courses = await selectAll((from, to) =>
+    client.from("catalog_courses").select("id, code").order("id").range(from, to),
+  );
+  const targets = courses.filter((c): c is { id: string; code: string } => c.code != null);
   const courseIdByCode = new Map(targets.map((c) => [c.code, c.id]));
 
   console.log(`--- Step 1: catalog_text (${targets.length} courses via proxy-bubble.php) ---`);

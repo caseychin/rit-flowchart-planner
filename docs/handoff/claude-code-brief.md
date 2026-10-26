@@ -574,7 +574,10 @@ enum value — see `schema-decisions.md` Decision 5):
   department...") is fully and correctly captured as a single `unparsed` root
   node, so it's honestly `'parsed'`. This is safe because the (future,
   v2) warn-only validator only ever acts on `node_type = 'course'` leaves —
-  an all-`unparsed` tree can never produce a false warning.
+  an all-`unparsed` tree can never produce a false warning. *(2026-10-26: a
+  mixed OR group, e.g. "CSCI-142 or equivalent course", can, so the validator
+  must treat an OR with any unparsed child as satisfied. See Decision 5 in
+  schema-decisions.md.)*
 - `'none'` is reserved narrowly for literal "No Prerequisites" (19 courses) —
   a true zero-barriers signal, distinct from "there's a barrier but it isn't
   course-based."

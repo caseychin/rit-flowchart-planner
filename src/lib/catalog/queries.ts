@@ -84,6 +84,7 @@ export async function getCourseDetail(
     .eq("id", courseId)
     .maybeSingle();
 
+  if (courseError?.code === "22P02") return null; // not a uuid, so it can't match a course
   if (courseError) throw courseError;
   if (!course) return null;
 

@@ -72,6 +72,10 @@ describe("getCourseDetail", () => {
     ).toBeNull();
   });
 
+  it("returns null (not a thrown 22P02) for an id that isn't a uuid", async () => {
+    expect(await getCourseDetail(supabase, "not-a-uuid")).toBeNull();
+  });
+
   it("returns full detail with a null prereqTree when prereq_parse_status is not 'parsed'", async () => {
     const [summary] = await searchCourses(supabase, "CSCI-141");
     const detail = await getCourseDetail(supabase, summary.id);
