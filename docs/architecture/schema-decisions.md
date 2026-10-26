@@ -91,6 +91,17 @@ do not reduce to course references. The text is both fallback and audit trail.
 the planner which courses it may reason about. It must be set honestly — the
 warn-only guarantee depends entirely on that flag being trustworthy.
 
+**`parsed` doesn't mean every leaf is a known course (2026-10-26).** `unparsed`
+leaves inside a `parsed` tree are either recognized phrases ("or equivalent
+course", "Math Placement Exam score of at least 35") or course codes that don't
+resolve to a `catalog_courses` row (subjects never ingested, old numeric codes).
+Any validator must treat an **OR group with any `unparsed` child as satisfied**,
+because the student may have met that alternative. AND groups need no special
+case: ignoring an unknown requirement only means a missed warning, never a
+false one. In dev, 52 courses have an unknown code directly under an OR and 69
+have a phrase there. Downgrading those courses to `partial` was considered and
+rejected: it cut `parsed` from 100 to 47 and still missed the phrase cases.
+
 ---
 
 ## Decision 6 — Sections excluded; availability retained
