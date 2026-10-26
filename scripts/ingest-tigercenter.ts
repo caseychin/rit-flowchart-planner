@@ -9,6 +9,7 @@ config({ path: ".env.ingest" });
 
 import { createRateLimitedFetcher } from "../src/ingest/http";
 import { createServiceClient } from "../src/ingest/service-client";
+import { selectAll } from "../src/ingest/select-all";
 import { fetchAndPersist } from "../src/ingest/documents";
 import { startRun, finishRun } from "../src/ingest/runs";
 import {
@@ -39,15 +40,17 @@ const fetchPersisted = (
 ) => fetchAndPersist(client, runId, "tigercenter", fetchFn);
 
 async function loadAttributeIdMap(client: SupabaseClient<Database>): Promise<Map<string, string>> {
-  const { data, error } = await client.from("catalog_attributes").select("id, group_code, value_code");
-  if (error) throw error;
-  return new Map((data ?? []).map((row) => [`${row.group_code} ${row.value_code}`, row.id]));
+  const rows = await selectAll((from, to) =>
+    client.from("catalog_attributes").select("id, group_code, value_code").order("id").range(from, to),
+  );
+  return new Map(rows.map((row) => [`${row.group_code} ${row.value_code}`, row.id]));
 }
 
 async function loadSubjectScope(client: SupabaseClient<Database>): Promise<string[]> {
-  const { data, error } = await client.from("catalog_courses").select("subject_code");
-  if (error) throw error;
-  const subjects = [...new Set((data ?? []).map((row) => row.subject_code))].sort();
+  const rows = await selectAll((from, to) =>
+    client.from("catalog_courses").select("subject_code").order("id").range(from, to),
+  );
+  const subjects = [...new Set(rows.map((row) => row.subject_code))].sort();
   if (subjects.length === 0) {
     throw new Error(
       "No catalog_courses rows found — run `npm run ingest:programs` first. " +

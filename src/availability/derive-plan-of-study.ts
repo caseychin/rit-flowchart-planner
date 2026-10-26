@@ -6,6 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase";
 import { upsertAvailabilityClaim, type UpsertOutcome } from "@/availability/upsert-availability-claim";
 import { PLAN_OF_STUDY_CONFIDENCE } from "@/availability/confidence";
+import { selectAll } from "@/ingest/select-all";
 
 export type DerivePlanOfStudyStats = {
   pairsConsidered: number;
@@ -15,16 +16,19 @@ export type DerivePlanOfStudyStats = {
 export async function derivePlanOfStudyAvailability(
   client: SupabaseClient<Database>,
 ): Promise<DerivePlanOfStudyStats> {
-  const { data, error } = await client
-    .from("catalog_requirement_slots")
-    .select("course_id, season")
-    .eq("kind", "course")
-    .not("course_id", "is", null)
-    .not("season", "is", null);
-  if (error) throw error;
+  const data = await selectAll((from, to) =>
+    client
+      .from("catalog_requirement_slots")
+      .select("course_id, season")
+      .eq("kind", "course")
+      .not("course_id", "is", null)
+      .not("season", "is", null)
+      .order("id")
+      .range(from, to),
+  );
 
   const pairs = new Map<string, { courseId: string; season: Database["public"]["Enums"]["term_season"] }>();
-  for (const row of data ?? []) {
+  for (const row of data) {
     if (!row.course_id || !row.season) continue;
     pairs.set(`${row.course_id}|${row.season}`, { courseId: row.course_id, season: row.season });
   }

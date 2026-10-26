@@ -9,6 +9,7 @@ import { config } from "dotenv";
 config({ path: ".env.ingest" });
 
 import { createServiceClient } from "../src/ingest/service-client";
+import { selectAll } from "../src/ingest/select-all";
 import { parsePrereqText } from "../src/prereqs/parse-prereq-text";
 import { resolveCourseLeaves } from "../src/prereqs/resolve-courses";
 import { writePrereqTree } from "../src/prereqs/write-prereq-tree";
@@ -19,25 +20,29 @@ const SUBJECTS = ["CSCI", "MATH"];
 async function main() {
   const client = createServiceClient();
 
-  const { data: allCourses, error: allCoursesError } = await client.from("catalog_courses").select("id, code");
-  if (allCoursesError) throw allCoursesError;
+  const allCourses = await selectAll((from, to) =>
+    client.from("catalog_courses").select("id, code").order("id").range(from, to),
+  );
   const codeToId = new Map<string, string>();
-  for (const c of allCourses ?? []) {
+  for (const c of allCourses) {
     if (c.code) codeToId.set(c.code, c.id);
   }
 
-  const { data: targets, error: targetsError } = await client
-    .from("catalog_courses")
-    .select("id, code, prereq_text")
-    .in("subject_code", SUBJECTS)
-    .order("code");
-  if (targetsError) throw targetsError;
+  const targets = await selectAll((from, to) =>
+    client
+      .from("catalog_courses")
+      .select("id, code, prereq_text")
+      .in("subject_code", SUBJECTS)
+      .order("code")
+      .order("id")
+      .range(from, to),
+  );
 
   const stats: Record<PrereqParseStatus, number> = { none: 0, parsed: 0, partial: 0, failed: 0 };
   const flagged: { code: string; status: PrereqParseStatus }[] = [];
   let skippedNullText = 0;
 
-  for (const course of targets ?? []) {
+  for (const course of targets) {
     if (course.prereq_text == null) {
       skippedNullText += 1;
       continue;
@@ -53,7 +58,7 @@ async function main() {
     }
   }
 
-  const total = (targets ?? []).length;
+  const total = targets.length;
   const eligibleForParsed = total - stats.none;
   console.log(`Processed ${total} CSCI/MATH courses (${skippedNullText} skipped, no prereq_text).`);
   console.log(`Status counts:`, stats);

@@ -8,6 +8,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase";
 import { upsertAvailabilityClaim, type UpsertOutcome } from "@/availability/upsert-availability-claim";
 import { computeObservedConfidence } from "@/availability/confidence";
+import { selectAll } from "@/ingest/select-all";
 
 export type DeriveObservedStats = {
   pairsConsidered: number;
@@ -15,14 +16,18 @@ export type DeriveObservedStats = {
 };
 
 export async function deriveObservedAvailability(client: SupabaseClient<Database>): Promise<DeriveObservedStats> {
-  const { data, error } = await client
-    .from("catalog_course_term_offerings")
-    .select("course_id, season, term_code")
-    .not("season", "is", null);
-  if (error) throw error;
+  const data = await selectAll((from, to) =>
+    client
+      .from("catalog_course_term_offerings")
+      .select("course_id, season, term_code")
+      .not("season", "is", null)
+      .order("course_id")
+      .order("term_code")
+      .range(from, to),
+  );
 
   const termCodesByPair = new Map<string, { courseId: string; season: Database["public"]["Enums"]["term_season"]; termCodes: Set<string> }>();
-  for (const row of data ?? []) {
+  for (const row of data) {
     if (!row.season) continue;
     const key = `${row.course_id}|${row.season}`;
     const existing = termCodesByPair.get(key);
