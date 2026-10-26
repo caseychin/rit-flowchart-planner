@@ -1,9 +1,8 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
 import { parseCurriculum } from "@/ingest/sources/programs-api/parse-curriculum";
 import { parseCatalogYear } from "@/ingest/sources/programs-api/parse-catalog-year";
 import type { RequirementSlotIR, TermSeason } from "@/ingest/types";
+import { loadFixture } from "../fixtures/load";
 
 // Acceptance test for Task 2: the CS BS program reconstructs to match
 // CSUndergradFlowChart.pdf — same courses, years, terms, co-op placement,
@@ -17,9 +16,7 @@ import type { RequirementSlotIR, TermSeason } from "@/ingest/types";
 // confirmed the overall shape (5-year plan, 3 co-op blocks, Gen Ed
 // Immersion/Perspective placeholders) but is not asserted against literally.
 
-function fixture(name: string): string {
-  return readFileSync(fileURLToPath(new URL(`../fixtures/programs-api/${name}`, import.meta.url)), "utf8");
-}
+const fixture = (name: string) => loadFixture("programs-api", name);
 
 type ExpectedSlot = Partial<RequirementSlotIR> & Pick<RequirementSlotIR, "kind">;
 

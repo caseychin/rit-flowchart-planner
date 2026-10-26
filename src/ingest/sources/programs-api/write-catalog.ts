@@ -12,6 +12,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase";
 import type { ParsedProgram } from "@/ingest/types";
+import { ensureSubjectStub, findCourseId } from "@/ingest/catalog-courses";
 
 function splitCourseCode(code: string): { subjectCode: string; catalogNumber: string } {
   const [subjectCode, ...rest] = code.split("-");
@@ -88,21 +89,13 @@ export async function writeProgramCurriculum(
     if (cached) return cached;
 
     const { subjectCode, catalogNumber } = splitCourseCode(code);
-    const { error: subjectError } = await client
-      .from("catalog_subjects")
-      .upsert({ code: subjectCode, name: subjectCode }, { onConflict: "code", ignoreDuplicates: true });
-    if (subjectError) throw subjectError;
+    await ensureSubjectStub(client, subjectCode);
 
-    const { data: existing } = await client
-      .from("catalog_courses")
-      .select("id")
-      .eq("subject_code", subjectCode)
-      .eq("catalog_number", catalogNumber)
-      .maybeSingle();
+    const existingId = await findCourseId(client, subjectCode, catalogNumber);
 
     let id: string;
-    if (existing) {
-      id = existing.id;
+    if (existingId) {
+      id = existingId;
     } else {
       const { data: inserted, error: insertError } = await client
         .from("catalog_courses")

@@ -423,13 +423,8 @@ create table flowchart_blocks (
   year_number           smallint not null,
   season                term_season not null,
   sort_order            integer not null default 0,
-  -- Links rows that together render as ONE multi-term block (a year-long
-  -- co-op spanning Fall/Spring/Summer, say). Null for the vast majority of
-  -- blocks, which occupy exactly one term on their own. A spanning block is
-  -- still N ordinary rows — one per term it occupies, each with its own real
-  -- (year_number, season) — never a widened range; the UI/API merge
-  -- same-span_group_id rows into one rendered block. See Decision 9 in
-  -- schema-decisions.md.
+  -- Links rows rendered as ONE multi-term block. Null for the vast majority
+  -- of (single-term) blocks. See Decision 9 in schema-decisions.md.
   span_group_id         uuid,
 
   kind                  block_kind not null,
