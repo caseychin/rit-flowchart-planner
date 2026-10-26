@@ -562,6 +562,7 @@ export type Database = {
           season: Database["public"]["Enums"]["term_season"]
           sort_order: number
           source_slot_id: string | null
+          span_group_id: string | null
           status: Database["public"]["Enums"]["block_status"]
           updated_at: string
           year_number: number
@@ -583,6 +584,7 @@ export type Database = {
           season: Database["public"]["Enums"]["term_season"]
           sort_order?: number
           source_slot_id?: string | null
+          span_group_id?: string | null
           status?: Database["public"]["Enums"]["block_status"]
           updated_at?: string
           year_number: number
@@ -604,6 +606,7 @@ export type Database = {
           season?: Database["public"]["Enums"]["term_season"]
           sort_order?: number
           source_slot_id?: string | null
+          span_group_id?: string | null
           status?: Database["public"]["Enums"]["block_status"]
           updated_at?: string
           year_number?: number
